@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TFT Double Up Stats</title>
+    <link 
+        href="https://unpkg.com/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .stats-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .container {
+            padding: 20px;
+        }
+        .player-info {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+        .player-card {
+            text-align: center;
+            padding: 20px;
+            margin: 0 10px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            flex: 1;
+        }
+        .stats-row {
+            margin: 20px 0;
+        }
+        .stat-box {
+            text-align: center;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            margin-top: 5px;
+            color: #6c757d;
+        }
+        .game-card {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+        .game-card .row {
+            align-items: center;
+        }
+        .game-card .datetime {
+            font-weight: bold;
+            color: #495057;
+        }
+        .game-card .placement {
+            font-weight: bold;
+        }
+        .game-card .traits {
+            font-size: 0.9em;
+            color: #495057;
+        }
+        .game-card .player-name {
+            font-weight: bold;
+            color: #007bff;
+        }
+        .placement-1 {
+            background-color: #90EE90;
+            border: 1px solid #7cdc7c;
+        }
+        .placement-2 {
+            background-color: #C3EEC3;
+            border: 1px solid #b0ddb0;
+        }
+        .placement-3 {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+        .placement-4 {
+            background-color: #F8BFC3;
+            border: 1px solid #e5adb1;
+        }
+        .pagination {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+        }
+        .pagination .page-item {
+            list-style: none;
+        }
+        .pagination .page-link {
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            color: #007bff;
+            background-color: #fff;
+            cursor: pointer;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #007bff;
+            color: #fff;
+            border-color: #007bff;
+        }
+        .pagination .page-item.disabled .page-link {
+            color: #6c757d;
+            pointer-events: none;
+            background-color: #fff;
+            border-color: #dee2e6;
+        }
+        .match-history {
+            margin-top: 30px;
+        }
+        .favorite-traits {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .favorite-trait {
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .trait-count {
+            font-weight: bold;
+            color: #444;
+        }
+        /* Make server select box match player input height */
+        #serverSelect {
+            height: calc(1.5em + .75rem + 2px);  /* Match Bootstrap's form-control height */
+        }
+        .card {
+            height: 100%;  /* Make all cards the same height */
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">TFT Double Up Stats</h1>
+        
+        <!-- Add player input fields -->
+        <div class="row mb-4">
+            <div class="col-md-5">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Player 1</h5>
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control text-center"
+                                   id="player1Name" placeholder="Game Name">
+                            <input type="text" class="form-control text-center"
+                                   id="player1Tag" placeholder="Tag">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Server</h5>
+                        <select class="form-control text-center"
+                                id="serverSelect">
+                            <option value="NA">NA</option>
+                            <option value="BR">BR</option>
+                            <option value="LAN">LAN</option>
+                            <option value="LAS">LAS</option>
+                            <option value="EUW">EUW</option>
+                            <option value="EUNE">EUNE</option>
+                            <option value="TR">TR</option>
+                            <option value="KR">KR</option>
+                            <option value="JP">JP</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Player 2</h5>
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control text-center"
+                                   id="player2Name" placeholder="Game Name">
+                            <input type="text" class="form-control text-center"
+                                   id="player2Tag" placeholder="Tag">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stats-card">
+            <div class="player-info">
+                <div class="player-card">
+                    <h4 id="displayPlayer1">Player 1</h4>
+                    <p>Rank: <span id="player1Rank">-</span></p>
+                    <p id="player1Traits" class="favorite-traits"></p>
+                </div>
+                <div class="player-card">
+                    <h4 id="displayPlayer2">Player 2</h4>
+                    <p>Rank: <span id="player2Rank">-</span></p>
+                    <p id="player2Traits" class="favorite-traits"></p>
+                </div>
+            </div>
+            
+            <div class="row stats-row">
+                <div class="col-md-3">
+                    <div class="stat-box">
+                        <div class="stat-value" id="total-games">-</div>
+                        <div class="stat-label">Total Games</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-box">
+                        <div class="stat-value" id="wins">-</div>
+                        <div class="stat-label">Wins (Top 2)</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-box">
+                        <div class="stat-value" id="win-rate">-</div>
+                        <div class="stat-label">Win Rate</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-box">
+                        <div class="stat-value" id="best-streak">-</div>
+                        <div class="stat-label">Best Win Streak</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="match-history">
+                <div class="text-center mb-4">
+                    <button id="updateButton" class="btn btn-primary"
+                            onclick="updateStats()">Update Data</button>
+                    <div id="updateStatus" class="mt-2 text-muted"></div>
+                </div>
+                <h3>Match History</h3>
+                <div id="games-list"></div>
+                <nav>
+                    <ul id="pagination" class="pagination"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Variables
+        let currentPage = 1;
+        let allGames = [];
+        const gamesPerPage = 10;
+        let stats = JSON.parse('{{ stats|tojson|safe }}');
+        const button = document.getElementById('updateButton');
+        const status = document.getElementById('updateStatus');
+        let cooldownEndTime = JSON.parse('{{ cooldown_end_time|tojson|safe }}');
+        let updateStatus = JSON.parse('{{ update_status|tojson|safe }}');
+
+        // Disable button and show updating state
+        function buttonUpdating(button) {
+            button.disabled = true;
+            button.textContent = 'Updating...';
+            status.textContent = "Be Patient :)";
+        }
+
+        // Enable button for next update
+        function buttonReady(button) {
+            button.disabled = false;
+            button.textContent = 'Update Data';
+            status.textContent = "";
+        }
+
+        // Check and show cooldown timer on button after update
+        function checkCooldown() {   
+            // Convert Python timestamp (seconds) to JavaScript timestamp (ms)
+            const cooldownEndTimeMs = cooldownEndTime * 1000;
+            const remaining_seconds = 
+                Math.ceil((cooldownEndTimeMs - Date.now()) / 1000);
+            if (remaining_seconds <= 0) {
+                buttonReady(button);
+            } else {
+                button.disabled = true;
+                button.textContent = `Update Data (${Math.floor
+                                     (remaining_seconds/60)}m
+                                     ${remaining_seconds%60}s)`;
+                status.textContent = updateStatus;
+
+                // Update cooldown timer every second
+                setTimeout(checkCooldown, 1000);
+            }
+        }
+        
+        // Check and update button state
+        function checkButtonStatus() {
+            if (updateStatus === "Be Patient :)") {
+                buttonUpdating(button);
+            } else {
+                checkCooldown();
+            }
+        }
+        
+        // fetch new data and update the page
+        function updateStats() {
+            const player1Name = document.getElementById('player1Name').value;
+            const player1Tag = document.getElementById('player1Tag').value;
+            const player2Name = document.getElementById('player2Name').value;
+            const player2Tag = document.getElementById('player2Tag').value;
+            const server = document.getElementById('serverSelect').value;
+            
+            if (!player1Name || !player1Tag || !player2Name || !player2Tag) {
+                status.textContent = 'Please fill in all player information';
+                return;
+            }
+            
+            buttonUpdating(button);
+            fetch('/update?' + new URLSearchParams({
+                player1Name: player1Name,
+                player1Tag: player1Tag,
+                player2Name: player2Name,
+                player2Tag: player2Tag,
+                server: server
+            }))
+                .then(response => {
+                    window.location.reload();
+                })
+                .catch(error => {
+                    window.location.reload();
+                });
+        }
+
+        // Properly formats favorite traits for display
+        function formatFavoriteTraits(traits) {
+            if (!traits || traits.length === 0) return 'No data';
+            return traits.map(t => 
+                `<span class="favorite-trait">
+                    ${t.name} <span class="trait-count">(${t.count})</span>
+                </span>`
+            ).join(' ');
+        }
+
+        // Update player info on the page
+        function updatePlayerInfo(stats) {
+            // Update player 1 info
+            document.getElementById('displayPlayer1').textContent = 
+                stats.player1.name === "Player 1" ? "Player 1" : 
+                `${stats.player1.name}#${stats.player1.tag}`;
+            document.getElementById('player1Rank').textContent = 
+                stats.player1.rank;
+            document.getElementById('player1Traits').innerHTML = 
+                'Favorite Traits: ' +
+                formatFavoriteTraits(stats.player1.favorite_traits);
+
+            // Update player 2 info
+            document.getElementById('displayPlayer2').textContent = 
+                stats.player2.name === "Player 2" ? "Player 2" : 
+                `${stats.player2.name}#${stats.player2.tag}`;
+            document.getElementById('player2Rank').textContent = 
+                stats.player2.rank;
+            document.getElementById('player2Traits').innerHTML = 
+                'Favorite Traits: ' +
+                formatFavoriteTraits(stats.player2.favorite_traits);
+        }
+        
+        // Update pagination based on the number of games
+        function updatePagination(totalGames) {
+            const totalPages = Math.ceil(totalGames / gamesPerPage);
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+            
+            // Previous button
+            const prevBtn = document.createElement('li');
+            prevBtn.className = `page-item ${totalPages === 0 ||
+                                 currentPage === 1 ? 'disabled' : ''}`;
+            prevBtn.innerHTML = '<a class="page-link" href="#">Previous</a>';
+            prevBtn.querySelector('a').onclick = (e) => {
+                e.preventDefault();
+                if (currentPage > 1) {
+                    currentPage--;
+                    updateGamesList();
+                }
+                return false;
+            };
+            pagination.appendChild(prevBtn);
+            
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                const pageBtn = document.createElement('li');
+                pageBtn.className =
+                    `page-item ${currentPage === i ? 'active' : ''}`;
+                pageBtn.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                pageBtn.querySelector('a').onclick = (e) => {
+                    e.preventDefault();
+                    currentPage = i;
+                    updateGamesList();
+                    return false;
+                };
+                pagination.appendChild(pageBtn);
+            }
+            
+            // Next button
+            const nextBtn = document.createElement('li');
+            nextBtn.className = `page-item ${totalPages === 0 ||
+                             currentPage === totalPages ? 'disabled' : ''}`;
+            nextBtn.innerHTML = '<a class="page-link" href="#">Next</a>';
+            nextBtn.querySelector('a').onclick = (e) => {
+                e.preventDefault();
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    updateGamesList();
+                }
+                return false;
+            };
+            pagination.appendChild(nextBtn);
+        }
+        
+        // Update and display match history
+        function updateGamesList() {
+            // Calculate pagination
+            const start = (currentPage - 1) * gamesPerPage;
+            const end = Math.min(start + gamesPerPage, allGames.length);
+            const paginated = allGames.slice(start, end);
+            
+            // Update games list
+            const gamesList = document.getElementById('games-list');
+            gamesList.innerHTML = '';
+            
+            paginated.forEach(game => {
+                const date = new Date(game.datetime);
+                const gameCard = document.createElement('div');
+                gameCard.className = `game-card placement-${game.placement}`;
+                
+                let placementText;
+                if (game.placement === 1) {
+                    placementText = '1st';
+                } else if (game.placement === 2) {
+                    placementText = '2nd';
+                } else if (game.placement === 3) {
+                    placementText = '3rd';
+                } else {
+                    placementText = '4th';
+                }
+                
+                gameCard.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-3">
+                            <span class="datetime">${date.toLocaleDateString()}
+                                                   ${date.getHours().toString().
+                                                   padStart(2, '0')}:${date.
+                                                   getMinutes().toString().
+                                                   padStart(2, '0')}</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span class="placement">
+                                Team Placement: ${placementText}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <span class="player-name">${stats.player1.name}
+                            </span>
+                            <span class="traits">${game.player1_traits}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <span class="player-name">${stats.player2.name}
+                            </span>
+                            <span class="traits">${game.player2_traits}</span>
+                        </div>
+                    </div>
+                `;
+                gamesList.appendChild(gameCard);
+            });
+            
+            // Update pagination
+            updatePagination(allGames.length);
+        }
+
+        function main() {
+            // Update button
+            checkButtonStatus();
+            
+            // Use data we already have
+            allGames = stats.match_history;
+            
+            // Update player ranks
+            updatePlayerInfo(stats);
+            
+            // Update stats
+            document.getElementById('total-games').textContent =
+                stats.total_games;
+            document.getElementById('wins').textContent = stats.wins;
+            document.getElementById('win-rate').textContent =
+                `${stats.win_rate}%`;
+            document.getElementById('best-streak').textContent =
+                stats.best_streak;
+            
+            // Update match history
+            updateGamesList();
+        }
+        
+        // Initial load
+        main();
+    </script>
+</body>
+</html>

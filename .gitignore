@@ -1,0 +1,9 @@
+# Environment variables
+.env
+
+# Python cache files
+__pycache__/
+.pytest_cache/
+
+# Application specific
+stats_cache.json
