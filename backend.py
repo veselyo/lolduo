@@ -7,6 +7,9 @@ import json
 import os
 from dotenv import load_dotenv
 
+# Set current set release date
+CURRENT_SET_DATE = int(datetime(2025, 7, 30).timestamp())
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -37,31 +40,15 @@ SERVER_CONFIGS = {
 global REGION, PLATFORM
 
 # Trait name dictionary to map from API names to in-game names since Riot Games
-# doesn't update them in their API between sets
-# SET_13_TRAIT_MAPPING = {
-#     'Academy': 'Academy',
-#     'Ambassador': 'Emissary',
-#     'Ambusher': 'Ambusher',
-#     'BloodHunter': 'Blood Hunter',
-#     'Bruiser': 'Bruiser',
-#     'Cabal': 'Black Rose',
-#     'Crime': 'Chem-Baron',
-#     'FormSwapper': 'Form Swapper',
-#     'Hextech': 'Automata',
-#     'HighRoller': 'High Roller',
-#     'Infused': 'Dominator',
-#     'Invoker': 'Visionary',
-#     'JunkerKing': 'Junker King',
-#     'MachineHerald': 'Machine Herald',
-#     'Martialist': 'Artillerist',
-#     'MissMageTrait': 'Banished Mage',
-#     'Pugilist': 'Pit Fighter',
-#     'Squad': 'Enforcer',
-#     'Titan': 'Sentinel',
-#     'Watcher': 'Watcher',
-#     'Warband': 'Conqueror',
-#     'Hoverboard': 'Family',
-# }
+# doesn't have them accurately in the API
+CURRENT_SET_TRAIT_MAPPING = {
+    'OldMentor': 'Mentor',
+    'GemForce': 'CrystalGambit',
+    'Spellslinger': 'Sorcerer',
+    'Empyrean': 'Wraith',
+    'SentaiRanger': 'MightyMech',
+    'Destroyer': 'Executioner',
+}
 
 def make_request(url, params=None):
     """Make a request to the Riot API. If we exceed the rate limit, wait 5
@@ -91,19 +78,11 @@ def get_account_info(game_name, tag_line):
     logger.info(f"Looking up player: {game_name}#{tag_line}")
     return make_request(url)
 
-def get_summoner_info(puuid):
-    """Get summoner info using puuid, used to get summonerId"""
+def get_double_up_rank(puuid):
+    """Get Double Up rank information using puuid."""
 
-    url = (f"https://{PLATFORM}.api.riotgames.com/tft/summoner/v1/"
-           f"summoners/by-puuid/{puuid}")
-    logger.info(f"Looking up Summoner Data...")
-    return make_request(url)
-
-def get_double_up_rank(summonerId):
-    """Get Double Up rank information using summonerId."""
-
-    url = (f"https://{PLATFORM}.api.riotgames.com/tft/league/v1/"
-           f"entries/by-summoner/{summonerId}")
+    url = (f"https://{PLATFORM}.api.riotgames.com/tft/league/v1/by-puuid/"
+           f"{puuid}")
     logger.info(f"Looking up TFT League Data...")
     response, status_code = make_request(url)
 
@@ -130,20 +109,17 @@ def get_double_up_rank(summonerId):
         return "Unranked"
 
 def get_match_history(puuid):
-    """Get match IDs for a given puuid from Set 13."""
+    """Get match IDs for a given puuid from current set."""
 
     url = (f"https://{REGION}.api.riotgames.com/tft/match/v1/"
            f"matches/by-puuid/{puuid}/ids")
     
-    # Set startTime to Set 13 start (November 20, 2024)
-    startTime = int(datetime(2024, 11, 20).timestamp())
-    
     params = {
         "start": 0,
         "count": 9999,
-        "startTime": startTime
+        "startTime": CURRENT_SET_DATE
     }
-    logger.info(f"Fetching TFT match history From Set 13...")
+    logger.info(f"Fetching TFT match history from current set...")
     return make_request(url, params)
 
 def get_match_details(match_id):
@@ -160,10 +136,11 @@ def extract_active_traits(player_match_data):
     for trait in player_match_data.get('traits', []):
         # Only include active traits
         if trait.get('tier_current', 0) > 0:
-            # Remove TFT13_ prefix and map to correct name
-            api_name = trait['name'].replace('TFT14_', '')
+            # Remove TFT15_ prefix and map to correct name
+            api_name = trait['name'].replace('TFT15_', '')
+            display_name = CURRENT_SET_TRAIT_MAPPING.get(api_name, api_name)
             traits.append({
-                'name': api_name,
+                'name': display_name,
                 'num_units': trait['num_units'],
                 'tier': trait['tier_current']
             })
@@ -186,6 +163,9 @@ def format_top_traits(traits):
     # If none found, fall back to traits with 2 or more units
     if not top_traits:
         top_traits = [t for t in traits if t['num_units'] >= 2]
+
+    if not top_traits:
+        return "Built Different"
     
     return ', '.join(f"{t['num_units']} {t['name']}" for t in top_traits)
 
@@ -335,23 +315,9 @@ def get_stats(game_name1, tag_line1, game_name2, tag_line2, server):
     puuid1 = account1.get('puuid')
     puuid2 = account2.get('puuid')
 
-    # Get summonerId for both players using their puuid
-    summoner1, status_code1 = get_summoner_info(puuid1)
-    summoner2, status_code2 = get_summoner_info(puuid2)
-    if not summoner1:
-        if status_code1 == 404 or status_code1 == 400:
-            return {'error': f"{game_name1}#{tag_line1} on {server} not found"}
-        return {'error': f"{status_code1}: Err getting smnr data for player 1"}
-    if not summoner2:
-        if status_code2 == 404 or status_code2 == 400:
-            return {'error': f"{game_name2}#{tag_line2} on {server} not found"}
-        return {'error': f"{status_code2}: Err getting smnr data for player 2"}
-    summonerId1 = summoner1.get('id')
-    summonerId2 = summoner2.get('id')
-    
     # Get rank info
-    rank1 = get_double_up_rank(summonerId1)
-    rank2 = get_double_up_rank(summonerId2)
+    rank1 = get_double_up_rank(puuid1)
+    rank2 = get_double_up_rank(puuid2)
     
     # Find all Double Up games with partner
     match_history, status_code = filter_double_up_games_together(puuid1, puuid2)
