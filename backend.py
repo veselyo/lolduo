@@ -38,30 +38,30 @@ global REGION, PLATFORM
 
 # Trait name dictionary to map from API names to in-game names since Riot Games
 # doesn't update them in their API between sets
-TRAIT_NAME_MAPPING = {
-    'Academy': 'Academy',
-    'Ambassador': 'Emissary',
-    'Ambusher': 'Ambusher',
-    'BloodHunter': 'Blood Hunter',
-    'Bruiser': 'Bruiser',
-    'Cabal': 'Black Rose',
-    'Crime': 'Chem-Baron',
-    'FormSwapper': 'Form Swapper',
-    'Hextech': 'Automata',
-    'HighRoller': 'High Roller',
-    'Infused': 'Dominator',
-    'Invoker': 'Visionary',
-    'JunkerKing': 'Junker King',
-    'MachineHerald': 'Machine Herald',
-    'Martialist': 'Artillerist',
-    'MissMageTrait': 'Banished Mage',
-    'Pugilist': 'Pit Fighter',
-    'Squad': 'Enforcer',
-    'Titan': 'Sentinel',
-    'Watcher': 'Watcher',
-    'Warband': 'Conqueror',
-    'Hoverboard': 'Family',
-}
+# SET_13_TRAIT_MAPPING = {
+#     'Academy': 'Academy',
+#     'Ambassador': 'Emissary',
+#     'Ambusher': 'Ambusher',
+#     'BloodHunter': 'Blood Hunter',
+#     'Bruiser': 'Bruiser',
+#     'Cabal': 'Black Rose',
+#     'Crime': 'Chem-Baron',
+#     'FormSwapper': 'Form Swapper',
+#     'Hextech': 'Automata',
+#     'HighRoller': 'High Roller',
+#     'Infused': 'Dominator',
+#     'Invoker': 'Visionary',
+#     'JunkerKing': 'Junker King',
+#     'MachineHerald': 'Machine Herald',
+#     'Martialist': 'Artillerist',
+#     'MissMageTrait': 'Banished Mage',
+#     'Pugilist': 'Pit Fighter',
+#     'Squad': 'Enforcer',
+#     'Titan': 'Sentinel',
+#     'Watcher': 'Watcher',
+#     'Warband': 'Conqueror',
+#     'Hoverboard': 'Family',
+# }
 
 def make_request(url, params=None):
     """Make a request to the Riot API. If we exceed the rate limit, wait 5
@@ -161,10 +161,9 @@ def extract_active_traits(player_match_data):
         # Only include active traits
         if trait.get('tier_current', 0) > 0:
             # Remove TFT13_ prefix and map to correct name
-            api_name = trait['name'].replace('TFT13_', '')
-            display_name = TRAIT_NAME_MAPPING.get(api_name, api_name)
+            api_name = trait['name'].replace('TFT14_', '')
             traits.append({
-                'name': display_name,
+                'name': api_name,
                 'num_units': trait['num_units'],
                 'tier': trait['tier_current']
             })

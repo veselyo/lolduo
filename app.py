@@ -103,7 +103,7 @@ def update_stats():
         
         # Fetch new data
         new_stats = fetch_fresh_stats(player1_name, player1_tag, 
-                                    player2_name, player2_tag, server)
+                                      player2_name, player2_tag, server)
 
         # Delete existing cache
         if os.path.exists(CACHE_FILE):
