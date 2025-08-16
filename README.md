@@ -15,4 +15,4 @@ trackers that lack teammate-specific insights.
 - Ondrej Vesely – Author
 
 ## Demo
-![LoLDuo Dashboard](demo/dashboard.png)
+![LoLDuo Dashboard](demo/dashboard.jpg)
